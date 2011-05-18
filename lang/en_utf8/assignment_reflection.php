@@ -16,4 +16,8 @@ $string['typereflection'] = 'Reflection';
 $string['waitingforgrading'] = 'Your assignment is submitted for grading.';
 $string['waitingforsubmissions'] = 'Waiting for $a->left out of $a->size group members to submit their reflections.';
 
+$string['recompletion'] = 'The student needs to complete the assignment';
+$string['notreadyforgrading'] = 'The student is not ready for grading.';
+$string['waitingforgroup'] = 'Students who are waiting for groupmembers to submit.';
+$string['nostudentswaitingforgroup'] = 'No students are waiting for groupmembers to submit.';
 ?>

@@ -16,4 +16,8 @@ $string['typereflection'] = 'Reflektion';
 $string['waitingforgrading'] = 'Din inlämmning ligger uppe för rättning.';
 $string['waitingforsubmissions'] = 'Väntar på att $a->left av $a->size gruppmedlemmar skall lämna in sina reflektioner.';
 
+$string['recompletion'] = 'Studenten behöver komplettera uppgiften';
+$string['notreadyforgrading'] = 'Studenten är ej klar för rättning.';
+$string['waitingforgroup'] = 'Studenter som väntar på grupp indelning.';
+$string['nostudentswaitingforgroup'] = 'Inga studenter väntar på grupp indelning.';
 ?>

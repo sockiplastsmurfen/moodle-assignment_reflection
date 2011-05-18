@@ -43,7 +43,7 @@ To make sure you get the latest version download it from here:
 # Visit the notifications page and the module will install.
 IMPORTANT! This module relies on the groupings function.
    
-To enable it go to <code>Miscellaneous -> Experimental</code> and check the ”<code>Enable groupings</code>” box.
+To enable it go to <code>Miscellaneous -> Experimental</code> and check the ‚Äù<code>Enable groupings</code>‚Äù box.
 
 == Setting up a Reflection assignment ==
 # Select Reflection under Assignments from the Activities menu on the course page.
@@ -54,7 +54,7 @@ This project is sponsored by [http://dsv.su.se/en/ DSV] at Stockholm Stockholm u
 
 == Todo ==
 * Support for document submission
-* Make the ”ready for grading button” optional
+* Make the ‚Äùready for grading button‚Äù optional
 
 == Links ==
 * [http://moodle.org/mod/data/view.php?d=13&rid=4356&filter=1 Moodle Modules Posting] (Please add comments here)

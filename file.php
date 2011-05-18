@@ -36,12 +36,31 @@ if ($assignment->assignmenttype != 'reflection') {
 $assignmentinstance = new assignment_reflection($cm->id, $assignment, $cm, $course);
 
 if ($submission = $assignmentinstance->get_submission($user->id)) {
+	
+	$data2 = unserialize($submission->data2);
+	
+	// ------------------- Recompletion button -----------------------------
+    if(isset($_POST['recompletion'])){
+		$data2->status = 1;               
+     	$data2 = serialize($data2);
+		
+		set_field("assignment_submissions", "data2", $data2, "id", $_POST['recompletion']);
+             redirect('file.php?id=' . $cm->id . '&userid=' . $user->id, '', 0);
+      }
+
+	// ------------------------------------------------------------
+	
+	
     print_header(fullname($user, true) . ': ' . $assignment->name);
 
-    print_heading(get_string('typereflection', 'assignment_reflection'), 'center', 3);
+	$forummodule = get_field('modules', 'id', 'name' ,'forum');
+	$forumcmid = get_field('course_modules', 'id','module', $forummodule, 'instance', $data2->forumid);
+	
+	$forumlink = ' (<a href="' . $CFG->wwwroot . '/mod/forum/view.php?id=' . $forumcmid . '">'.get_string('forum', 'forum').'</a>)';
+    print_heading(get_string('typereflection', 'assignment_reflection') . ($forumcmid ? $forumlink : ''), 'center', 3);
     print_simple_box(format_text($submission->data1, $submission->format), 'center', '100%');
 
-    print_simple_box_start('center', '', '', '', 'generalbox', 'dates');
+    print_simple_box_start('center', '100%', '', '', 'generalbox', 'dates');
     echo '<table>';
     if ($assignment->timedue) {
         echo '<tr><td class="c0">' . get_string('duedate', 'assignment') . ':</td>';
@@ -59,7 +78,7 @@ if ($submission = $assignmentinstance->get_submission($user->id)) {
     print_simple_box_end();
 
 
-    $obj = unserialize($submission->data2);
+    
 
     $sql = 'SELECT id, discussion, parent, subject, message, format, userid
                 FROM ' . $CFG->prefix . 'forum_posts
@@ -68,7 +87,7 @@ if ($submission = $assignmentinstance->get_submission($user->id)) {
                 AND discussion IN (
                     SELECT id
                     FROM ' . $CFG->prefix . 'forum_discussions
-                    WHERE forum = ' . $obj->forumid . ')';
+                    WHERE forum = ' . $data2->forumid . ')';
 
     $arr = get_records_sql($sql);
 
@@ -77,10 +96,24 @@ if ($submission = $assignmentinstance->get_submission($user->id)) {
     if ($arr) {
         foreach ($arr as $obj) {
             $comment = '<a href="' . $CFG->wwwroot . '/mod/forum/discuss.php?d=' . $obj->discussion . '#p' . $obj->id . '">' .
-                    format_text($obj->subject, $obj->format) . '</a>' . format_text($obj->message, $obj->format);
+                    format_text($obj->subject, $obj->format) . '</a><br>' . format_text($obj->message, $obj->format);
             print_simple_box($comment, 'center', '100%');
         }
     }
+
+
+	// ------------------- Recompletion button -----------------------------
+	  if($data2->status == 2){
+            echo "<div style='text-align:center'>";
+            print_single_button('file.php?id=' . $cm->id . '&userid=' . $user->id, 
+				array('id' => $cm->id, 'recompletion' => $submission->id),
+                get_string('recompletion', 'assignment_reflection'), 'post', 'self', false, '');
+            echo "</div>";
+       } else {
+			notify(get_string('notreadyforgrading', 'assignment_reflection'));
+	   }
+	// ----------------------------------------------------------------------
+
     close_window_button();
     print_footer('none');
 } else {

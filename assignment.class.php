@@ -74,7 +74,7 @@ class assignment_reflection extends assignment_base {
         $mform->set_data($defaults);
 
         if ($mform->is_cancelled()) {
-            redirect('view.php?id=' . $this->cm->id);
+            redirect('view.php?id=' . $this->cm->id, 'cancelled', 0);
         }
 
         $data = $mform->get_data();
@@ -85,7 +85,7 @@ class assignment_reflection extends assignment_base {
                 add_to_log($this->course->id, 'assignment_reflection', 'upload', 'view.php?a='.$this->assignment->id, $this->assignment->id, $this->cm->id);
                 $this->email_teachers($submission);
                 //redirect to get updated submission date and word count
-                redirect('view.php?id=' . $this->cm->id . '&saved=1');
+                redirect('view.php?id=' . $this->cm->id . '&saved=1', 'saved', 0);
             } else {
                 // TODO: add better error message
                 notify(get_string("error")); //submitting not allowed!
@@ -117,7 +117,7 @@ class assignment_reflection extends assignment_base {
             else{
                 notify(get_string('forumnotcreated', 'assignment_reflection', $submissionsleft));
             }
-            redirect('view.php?id=' . $this->cm->id);
+            redirect('view.php?id=' . $this->cm->id, '', 0);
         }
 
         if($teacher){
@@ -158,6 +158,7 @@ class assignment_reflection extends assignment_base {
 
             if ($data2) {
                 $obj = unserialize($submission->data2);
+				$forummodule = get_field('modules', 'id', 'name' ,'forum');
                 
                 if ($data2->status == 1) {
                     $sql = 'SELECT COUNT(id) FROM '.$CFG->prefix.'forum_posts
@@ -169,18 +170,28 @@ class assignment_reflection extends assignment_base {
 
                     $count = count_records_sql($sql);
 
+					#$forummodule = get_field('modules', 'id', 'name' ,'forum');						
+
                     $obj = new stdClass();
                     $obj->count = $this->assignment->var2 -1;
-                    $obj->href = '<a href="'.$CFG->wwwroot.'/mod/forum/view.php?id='.get_field('course_modules', 'id','module', '5', 'instance', $data2->forumid).'">';
+
+                    $obj->href = '<a href="'.$CFG->wwwroot.'/mod/forum/view.php?id='.get_field('course_modules', 'id','module', $forummodule, 'instance', $data2->forumid).'">';
 
                     notify(get_string('forumlink', 'assignment_reflection', $obj), 'notifysuccess');
 
                     if($count >= $obj->count)
                         $dissabled = false; 
 
-                } elseif ($data2->status == 2 && $submission->grade == -1) {
-                    notify(get_string('waitingforgrading', 'assignment_reflection'), 'notifysuccess');
-                }
+                } elseif ($data2->status == 2 && $submission->grade == -1) {	
+					$forumlink = '(<a href="'.$CFG->wwwroot.'/mod/forum/view.php?id='.get_field('course_modules', 'id','module', $forummodule, 'instance', $data2->forumid).'">'.get_string('forum', 'forum').'</a>)';
+                    notify(get_string('waitingforgrading', 'assignment_reflection').' '.$forumlink, 'notifysuccess');
+
+                } 	elseif ($data2->status == 2 && $submission->grade != -1) {	
+						$forumlink = '<a href="'.$CFG->wwwroot.'/mod/forum/view.php?id='.get_field('course_modules', 'id','module', $forummodule, 'instance', $data2->forumid).'">'.get_string('forum', 'forum').'</a>';
+	                    notify($forumlink, 'notifysuccess');
+
+	                }
+
             } elseif($submission && $submission->data2 === '0') {
                 $size = get_field("assignment", "var2", "id", $this->cm->instance);
                 $current = count_records("assignment_submissions", "assignment", $this->cm->instance, "data2", "0");
@@ -197,7 +208,7 @@ class assignment_reflection extends assignment_base {
                 $data2 = serialize($data2);
 
                 set_field("assignment_submissions", "data2", $data2, "id", $_POST['readyforgrading']);
-                redirect('view.php?id=' . $this->cm->id);
+                redirect('view.php?id=' . $this->cm->id, 'ready for grading', 0);
             }               
         }
                
@@ -306,7 +317,7 @@ class assignment_reflection extends assignment_base {
             }
             
             $message = notify(get_string('changessaved'), 'notifysuccess', 'center', true);
-            redirect('view.php?id=' . $this->cm->id, $message);
+            redirect('view.php?id=' . $this->cm->id, $message, 0);
         }
     }
 
@@ -350,7 +361,12 @@ class assignment_reflection extends assignment_base {
             }
 
             $forum->section = $this->cm->section;
-            $forum->module = 5; // forum
+
+			#            $forum->module = 5; // forum
+			$forummodule = get_field('modules', 'id', 'name' ,'forum');
+			$forum->module = $forummodule;
+
+
             $forum->coursemodule = add_course_module($forum);
             $forum->section = get_field('course_sections', 'section', 'id', $this->cm->section);
 
@@ -631,7 +647,26 @@ class assignment_reflection extends assignment_base {
         $table->no_sorting('outcome');
 
         $table->setup();
+		# -----------------------------------------------		
 
+		$ungroupedusers = get_fieldset_select("assignment_submissions", "userid", "assignment = {$this->cm->instance} AND data2 = '0'");
+
+		if($ungroupedusers){			
+			print_box_start('generalbox boxwidthwide boxaligncenter', 'reflection');
+			print_heading(get_string('waitingforgroup', "assignment_reflection"));
+			echo '<ul>';
+			foreach ($ungroupedusers as $ungroupeduserid) {
+				$u = get_record('user', 'id', $ungroupeduserid);
+				echo '<li><a href="'.$CFG->wwwroot.'/user/view.php?id='.$u->id.'&course='.$this->course->id.'">'.$u->firstname.' '.$u->lastname.'</a></li>';
+			}
+			echo '</ul>';
+			print_box_end();
+		}else {
+			print_heading(get_string('nostudentswaitingforgroup', 'assignment_reflection'));
+		}
+
+		# -----------------------------------------------
+		
         if (empty($users)) {           
             print_heading(get_string('nostudentsready', "assignment_reflection"));
             return true;
